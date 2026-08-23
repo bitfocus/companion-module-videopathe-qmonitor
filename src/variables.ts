@@ -153,7 +153,7 @@ function boolText(value: boolean | undefined): string {
 export function buildVariableValues(self: ModuleInstance): CompanionVariableValues {
 	const snapshot: QMonitorSnapshot | undefined = self.snapshot
 	const values: CompanionVariableValues = {
-		connection_status: self.isConnected ? 'ok' : (self.lastError ? 'connection_failure' : 'disconnected'),
+		connection_status: self.isConnected ? 'ok' : self.lastError ? 'connection_failure' : 'disconnected',
 		server_url: self.getBaseUrl(),
 		app_version: snapshot?.version ?? '',
 		app_platform: snapshot?.platform ?? '',
@@ -199,7 +199,10 @@ export function buildVariableValues(self: ModuleInstance): CompanionVariableValu
 		journal_dropped: safeNumber(snapshot?.journal?.dropped),
 		preset_count: (snapshot?.presets ?? []).length,
 		lut_count: (snapshot?.luts ?? []).length,
-		preset_names: (snapshot?.presets ?? []).map((preset) => preset.name ?? '').filter(Boolean).join(', '),
+		preset_names: (snapshot?.presets ?? [])
+			.map((preset) => preset.name ?? '')
+			.filter(Boolean)
+			.join(', '),
 	}
 
 	for (const index of TILE_INDEXES) {

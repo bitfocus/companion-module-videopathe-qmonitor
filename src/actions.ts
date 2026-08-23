@@ -735,7 +735,10 @@ export function UpdateActions(self: ModuleInstance): void {
 				// Skipped tiles are the one thing a button press cannot show, and the
 				// one thing an operator needs to know afterwards.
 				if (result?.ok && Number(result.skippedRecordingTiles) > 0) {
-					self.log('warn', `Preset recalled, but ${String(result.skippedRecordingTiles)} recording tile(s) were left untouched`)
+					self.log(
+						'warn',
+						`Preset recalled, but ${String(result.skippedRecordingTiles)} recording tile(s) were left untouched`,
+					)
 				} else if (result?.ok === false) {
 					self.log('warn', `Preset not recalled: ${String(result.error ?? 'unknown')}`)
 				}

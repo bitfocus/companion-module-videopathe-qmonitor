@@ -58,13 +58,13 @@ export function UpdatePresets(self: ModuleInstance): void {
 			category,
 			name,
 			style: { show_topbar: false, ...style },
-			steps: actions.length ? [{ down: actions.map((a) => ({ actionId: a.actionId, options: a.options ?? {} })), up: [] }] : [{ down: [], up: [] }],
+			steps: actions.length
+				? [{ down: actions.map((a) => ({ actionId: a.actionId, options: a.options ?? {} })), up: [] }]
+				: [{ down: [], up: [] }],
 			feedbacks: [
 				disconnected,
 				...feedbacks.map((entry) =>
-					ADVANCED_FEEDBACKS.has(entry.feedbackId)
-						? { feedbackId: entry.feedbackId, options: entry.options }
-						: entry,
+					ADVANCED_FEEDBACKS.has(entry.feedbackId) ? { feedbackId: entry.feedbackId, options: entry.options } : entry,
 				),
 			],
 		}
@@ -78,7 +78,13 @@ export function UpdatePresets(self: ModuleInstance): void {
 			`Layout ${count}`,
 			{ text: `${count} TILE${count > 1 ? 'S' : ''}`, size: '18', color: WHITE, bgcolor: PANEL },
 			[{ actionId: 'layout_set', options: { value: String(count) } }],
-			[{ feedbackId: 'layout_matches', options: { value: String(count) }, style: { bgcolor: combineRgb(59, 130, 246), color: WHITE } }],
+			[
+				{
+					feedbackId: 'layout_matches',
+					options: { value: String(count) },
+					style: { bgcolor: combineRgb(59, 130, 246), color: WHITE },
+				},
+			],
 		)
 	}
 	for (const index of [1, 2, 3, 4]) {
@@ -88,11 +94,21 @@ export function UpdatePresets(self: ModuleInstance): void {
 			`Select tile ${index}`,
 			{ text: `TILE ${index}\n${variable(`tile_${index}_source_kind`)}`, size: '14', color: WHITE, bgcolor: PANEL },
 			[{ actionId: 'active_set', options: { value: String(index) } }],
-			[{ feedbackId: 'tile_active', options: { tile: index }, style: { bgcolor: combineRgb(250, 204, 21), color: BLACK } }],
+			[
+				{
+					feedbackId: 'tile_active',
+					options: { tile: index },
+					style: { bgcolor: combineRgb(250, 204, 21), color: BLACK },
+				},
+			],
 		)
 	}
-	button('active_prev', 'Views', 'Previous tile', { text: '◀ PREV', size: '18', color: WHITE, bgcolor: PANEL }, [{ actionId: 'active_previous' }])
-	button('active_next', 'Views', 'Next tile', { text: 'NEXT ▶', size: '18', color: WHITE, bgcolor: PANEL }, [{ actionId: 'active_next' }])
+	button('active_prev', 'Views', 'Previous tile', { text: '◀ PREV', size: '18', color: WHITE, bgcolor: PANEL }, [
+		{ actionId: 'active_previous' },
+	])
+	button('active_next', 'Views', 'Next tile', { text: 'NEXT ▶', size: '18', color: WHITE, bgcolor: PANEL }, [
+		{ actionId: 'active_next' },
+	])
 	button(
 		'window_fullscreen',
 		'Views',
@@ -117,17 +133,53 @@ export function UpdatePresets(self: ModuleInstance): void {
 			`Active: ${feature.label}`,
 			{ text: feature.label, size: '14', color: WHITE, bgcolor: PANEL },
 			[{ actionId: feature.actionId, options: { tile: '', state: '' } }],
-			[{ feedbackId: feature.feedbackId, options: { tile: 0 }, style: { bgcolor: combineRgb(34, 197, 94), color: BLACK } }],
+			[
+				{
+					feedbackId: feature.feedbackId,
+					options: { tile: 0 },
+					style: { bgcolor: combineRgb(34, 197, 94), color: BLACK },
+				},
+			],
 		)
 	}
 
 	// ---- Assist (active tile) ----
 	const assistPresets: { id: string; label: string; actionId: string; feedbackId: string; bg: number }[] = [
-		{ id: 'monochrome', label: 'B&W', actionId: 'tile_assist_monochrome', feedbackId: 'tile_assist_monochrome', bg: combineRgb(148, 163, 184) },
-		{ id: 'false_color', label: 'FALSE\nCOLOR', actionId: 'tile_assist_false_color', feedbackId: 'tile_assist_false_color', bg: combineRgb(234, 179, 8) },
-		{ id: 'zebras', label: 'ZEBRAS', actionId: 'tile_assist_zebras', feedbackId: 'tile_assist_zebras', bg: combineRgb(234, 179, 8) },
-		{ id: 'markers', label: 'MARKERS', actionId: 'tile_assist_markers', feedbackId: 'tile_assist_markers', bg: combineRgb(59, 130, 246) },
-		{ id: 'reticle', label: 'RETICLE', actionId: 'tile_assist_reticle', feedbackId: 'tile_assist_reticle', bg: combineRgb(59, 130, 246) },
+		{
+			id: 'monochrome',
+			label: 'B&W',
+			actionId: 'tile_assist_monochrome',
+			feedbackId: 'tile_assist_monochrome',
+			bg: combineRgb(148, 163, 184),
+		},
+		{
+			id: 'false_color',
+			label: 'FALSE\nCOLOR',
+			actionId: 'tile_assist_false_color',
+			feedbackId: 'tile_assist_false_color',
+			bg: combineRgb(234, 179, 8),
+		},
+		{
+			id: 'zebras',
+			label: 'ZEBRAS',
+			actionId: 'tile_assist_zebras',
+			feedbackId: 'tile_assist_zebras',
+			bg: combineRgb(234, 179, 8),
+		},
+		{
+			id: 'markers',
+			label: 'MARKERS',
+			actionId: 'tile_assist_markers',
+			feedbackId: 'tile_assist_markers',
+			bg: combineRgb(59, 130, 246),
+		},
+		{
+			id: 'reticle',
+			label: 'RETICLE',
+			actionId: 'tile_assist_reticle',
+			feedbackId: 'tile_assist_reticle',
+			bg: combineRgb(59, 130, 246),
+		},
 	]
 	for (const assist of assistPresets) {
 		button(
@@ -168,7 +220,13 @@ export function UpdatePresets(self: ModuleInstance): void {
 			`Active: ${layout.value} layout`,
 			{ text: layout.label, size: '14', color: WHITE, bgcolor: PANEL },
 			[{ actionId: 'tile_scopes_layout', options: { tile: '', value: layout.value } }],
-			[{ feedbackId: 'tile_scope_layout', options: { tile: 0, value: layout.value }, style: { bgcolor: combineRgb(59, 130, 246), color: WHITE } }],
+			[
+				{
+					feedbackId: 'tile_scope_layout',
+					options: { tile: 0, value: layout.value },
+					style: { bgcolor: combineRgb(59, 130, 246), color: WHITE },
+				},
+			],
 		)
 	}
 
@@ -186,7 +244,13 @@ export function UpdatePresets(self: ModuleInstance): void {
 			`Active: select ${scope.value} (Side / Full layouts)`,
 			{ text: scope.label, size: '14', color: WHITE, bgcolor: PANEL },
 			[{ actionId: 'tile_scopes_type', options: { tile: '', value: scope.value } }],
-			[{ feedbackId: 'tile_scope_type', options: { tile: 0, value: scope.value }, style: { bgcolor: combineRgb(34, 197, 94), color: BLACK } }],
+			[
+				{
+					feedbackId: 'tile_scope_type',
+					options: { tile: 0, value: scope.value },
+					style: { bgcolor: combineRgb(34, 197, 94), color: BLACK },
+				},
+			],
 		)
 	}
 
@@ -205,7 +269,13 @@ export function UpdatePresets(self: ModuleInstance): void {
 				{ actionId: 'tile_scopes_layout', options: { tile: '', value: 'full' } },
 				{ actionId: 'tile_scopes_type', options: { tile: '', value: scope.value } },
 			],
-			[{ feedbackId: 'tile_scope_visible', options: { tile: 0, value: scope.value }, style: { bgcolor: combineRgb(34, 197, 94), color: BLACK } }],
+			[
+				{
+					feedbackId: 'tile_scope_visible',
+					options: { tile: 0, value: scope.value },
+					style: { bgcolor: combineRgb(34, 197, 94), color: BLACK },
+				},
+			],
 		)
 	}
 
@@ -224,7 +294,13 @@ export function UpdatePresets(self: ModuleInstance): void {
 				{ actionId: 'tile_scopes_layout', options: { tile: '', value: layout } },
 				{ actionId: 'tile_scopes_slot', options: { tile: '', layout, slot: '4', value: 'diamond' } },
 			],
-			[{ feedbackId: 'tile_scope_visible', options: { tile: 0, value: 'diamond' }, style: { bgcolor: combineRgb(34, 197, 94), color: BLACK } }],
+			[
+				{
+					feedbackId: 'tile_scope_visible',
+					options: { tile: 0, value: 'diamond' },
+					style: { bgcolor: combineRgb(34, 197, 94), color: BLACK },
+				},
+			],
 		)
 	}
 
@@ -243,7 +319,13 @@ export function UpdatePresets(self: ModuleInstance): void {
 			`Active: scopes read as ${range.value}`,
 			{ text: range.label, size: '14', color: WHITE, bgcolor: PANEL },
 			[{ actionId: 'tile_scopes_dynamic_range', options: { tile: '', value: range.value } }],
-			[{ feedbackId: 'tile_scope_dynamic_range', options: { tile: 0, value: range.value }, style: { bgcolor: combineRgb(217, 119, 6), color: BLACK } }],
+			[
+				{
+					feedbackId: 'tile_scope_dynamic_range',
+					options: { tile: 0, value: range.value },
+					style: { bgcolor: combineRgb(217, 119, 6), color: BLACK },
+				},
+			],
 		)
 	}
 
@@ -263,7 +345,13 @@ export function UpdatePresets(self: ModuleInstance): void {
 				bgcolor: PANEL,
 			},
 			[{ actionId: 'tile_scopes', options: { tile: String(index), state: '' } }],
-			[{ feedbackId: 'tile_scopes', options: { tile: index }, style: { bgcolor: combineRgb(34, 197, 94), color: BLACK } }],
+			[
+				{
+					feedbackId: 'tile_scopes',
+					options: { tile: index },
+					style: { bgcolor: combineRgb(34, 197, 94), color: BLACK },
+				},
+			],
 		)
 	}
 
@@ -304,7 +392,13 @@ export function UpdatePresets(self: ModuleInstance): void {
 			`Active: ${mode.label.replace('\n', ' ')} mode`,
 			{ text: mode.label, size: '14', color: WHITE, bgcolor: PANEL },
 			[{ actionId: 'tile_compare_mode', options: { tile: '', value: mode.value } }],
-			[{ feedbackId: 'tile_compare_mode', options: { tile: 0, value: mode.value }, style: { bgcolor: combineRgb(6, 182, 212), color: BLACK } }],
+			[
+				{
+					feedbackId: 'tile_compare_mode',
+					options: { tile: 0, value: mode.value },
+					style: { bgcolor: combineRgb(6, 182, 212), color: BLACK },
+				},
+			],
 		)
 	}
 	button(
@@ -570,7 +664,13 @@ export function UpdatePresets(self: ModuleInstance): void {
 		'Recording quality: Quality',
 		{ text: `QUAL\n${variable('recording_quality')}`, size: '14', color: WHITE, bgcolor: PANEL },
 		[{ actionId: 'recording_quality', options: { value: 'quality' } }],
-		[{ feedbackId: 'recording_quality', options: { value: 'quality' }, style: { bgcolor: combineRgb(139, 92, 246), color: WHITE } }],
+		[
+			{
+				feedbackId: 'recording_quality',
+				options: { value: 'quality' },
+				style: { bgcolor: combineRgb(139, 92, 246), color: WHITE },
+			},
+		],
 	)
 
 	// ---- Tally ----
@@ -622,11 +722,13 @@ export function UpdatePresets(self: ModuleInstance): void {
 			`Tile ${index} — force OFF`,
 			{ text: `OFF ${index}\n${variable(`tile_${index}_label`)}`, size: '14', color: WHITE, bgcolor: PANEL },
 			[{ actionId: 'tally_toggle', options: { tile: String(index), value: 'off' } }],
-			[{
-				feedbackId: 'tile_tally_forced_state',
-				options: { tile: index, value: 'off' },
-				style: { bgcolor: combineRgb(217, 119, 6), color: BLACK },
-			}],
+			[
+				{
+					feedbackId: 'tile_tally_forced_state',
+					options: { tile: index, value: 'off' },
+					style: { bgcolor: combineRgb(217, 119, 6), color: BLACK },
+				},
+			],
 		)
 	}
 	// Pure lamps. No action at all, so a nervous finger cannot override the truth
@@ -685,7 +787,13 @@ export function UpdatePresets(self: ModuleInstance): void {
 		'Release forced tally — active tile',
 		{ text: 'TALLY\nRELEASE', size: '14', color: WHITE, bgcolor: PANEL },
 		[{ actionId: 'tally_release', options: { tile: '' } }],
-		[{ feedbackId: 'tile_tally_forced', options: { tile: 0 }, style: { bgcolor: combineRgb(217, 119, 6), color: BLACK } }],
+		[
+			{
+				feedbackId: 'tile_tally_forced',
+				options: { tile: 0 },
+				style: { bgcolor: combineRgb(217, 119, 6), color: BLACK },
+			},
+		],
 	)
 	button(
 		'tally_clear_all',
@@ -701,7 +809,13 @@ export function UpdatePresets(self: ModuleInstance): void {
 		'Tally display: Border',
 		{ text: 'TALLY\nBORDER', size: '14', color: WHITE, bgcolor: PANEL },
 		[{ actionId: 'tally_display', options: { value: 'border' } }],
-		[{ feedbackId: 'tally_display', options: { value: 'border' }, style: { bgcolor: combineRgb(59, 130, 246), color: WHITE } }],
+		[
+			{
+				feedbackId: 'tally_display',
+				options: { value: 'border' },
+				style: { bgcolor: combineRgb(59, 130, 246), color: WHITE },
+			},
+		],
 	)
 	button(
 		'tally_display_badge',
@@ -709,7 +823,13 @@ export function UpdatePresets(self: ModuleInstance): void {
 		'Tally display: Badge',
 		{ text: 'TALLY\nBADGE', size: '14', color: WHITE, bgcolor: PANEL },
 		[{ actionId: 'tally_display', options: { value: 'badge' } }],
-		[{ feedbackId: 'tally_display', options: { value: 'badge' }, style: { bgcolor: combineRgb(59, 130, 246), color: WHITE } }],
+		[
+			{
+				feedbackId: 'tally_display',
+				options: { value: 'badge' },
+				style: { bgcolor: combineRgb(59, 130, 246), color: WHITE },
+			},
+		],
 	)
 
 	// The health of the link itself. Without it, a dark tally wall is ambiguous:
@@ -737,7 +857,13 @@ export function UpdatePresets(self: ModuleInstance): void {
 			`Tile ${index} follows the mixer`,
 			{ text: `FOLLOW ${index}\n${variable(`tile_${index}_tally_input`)}`, size: '14', color: WHITE, bgcolor: PANEL },
 			[{ actionId: 'tally_follow', options: { tile: String(index), state: '' } }],
-			[{ feedbackId: 'tile_tally_follows', options: { tile: index }, style: { bgcolor: combineRgb(34, 197, 94), color: BLACK } }],
+			[
+				{
+					feedbackId: 'tile_tally_follows',
+					options: { tile: index },
+					style: { bgcolor: combineRgb(34, 197, 94), color: BLACK },
+				},
+			],
 		)
 	}
 
@@ -807,7 +933,13 @@ export function UpdatePresets(self: ModuleInstance): void {
 			`Arm tile ${index}`,
 			{ text: `ARM ${index}\n${variable(`tile_${index}_label`)}`, size: '14', color: WHITE, bgcolor: PANEL },
 			[{ actionId: 'alarm_enable', options: { tile: String(index), state: '' } }],
-			[{ feedbackId: 'alarm_armed', options: { tile: index, type: 'any' }, style: { bgcolor: combineRgb(21, 128, 61), color: WHITE } }],
+			[
+				{
+					feedbackId: 'alarm_armed',
+					options: { tile: index, type: 'any' },
+					style: { bgcolor: combineRgb(21, 128, 61), color: WHITE },
+				},
+			],
 		)
 	}
 	// The five video conditions ship disarmed, so a one-press key per condition is
@@ -825,7 +957,13 @@ export function UpdatePresets(self: ModuleInstance): void {
 			`Arm "${label}" on the active tile`,
 			{ text: `${label}\nALARM`, size: '14', color: WHITE, bgcolor: PANEL },
 			[{ actionId: 'alarm_condition', options: { tile: '', type, state: '' } }],
-			[{ feedbackId: 'alarm_armed', options: { tile: 0, type }, style: { bgcolor: combineRgb(21, 128, 61), color: WHITE } }],
+			[
+				{
+					feedbackId: 'alarm_armed',
+					options: { tile: 0, type },
+					style: { bgcolor: combineRgb(21, 128, 61), color: WHITE },
+				},
+			],
 		)
 	}
 	button(
@@ -834,7 +972,13 @@ export function UpdatePresets(self: ModuleInstance): void {
 		'Audible alert (active tile)',
 		{ text: 'ALARM\nSOUND', size: '14', color: WHITE, bgcolor: PANEL },
 		[{ actionId: 'alarm_sound', options: { tile: '', state: '' } }],
-		[{ feedbackId: 'alarm_sound_enabled', options: { tile: 0 }, style: { bgcolor: combineRgb(59, 130, 246), color: WHITE } }],
+		[
+			{
+				feedbackId: 'alarm_sound_enabled',
+				options: { tile: 0 },
+				style: { bgcolor: combineRgb(59, 130, 246), color: WHITE },
+			},
+		],
 	)
 	button(
 		'alarm_journal',
@@ -917,26 +1061,45 @@ export function UpdatePresets(self: ModuleInstance): void {
 
 	// ---- Readouts (variables, no action) ----
 	for (const index of [1, 2, 3, 4]) {
-		button(`readout_tile_${index}`, 'Readouts', `Tile ${index} info`, {
-			text: `T${index} ${variable(`tile_${index}_source_kind`)}\n${variable(`tile_${index}_resolution`)}\n${variable(`tile_${index}_codec`)}`,
+		button(
+			`readout_tile_${index}`,
+			'Readouts',
+			`Tile ${index} info`,
+			{
+				text: `T${index} ${variable(`tile_${index}_source_kind`)}\n${variable(`tile_${index}_resolution`)}\n${variable(`tile_${index}_codec`)}`,
+				size: '14',
+				color: WHITE,
+				bgcolor: combineRgb(15, 23, 35),
+			},
+			[],
+		)
+	}
+	button(
+		'readout_status',
+		'Readouts',
+		'Connection status',
+		{
+			text: `QMonitor\n${variable('connection_status')}\nL${variable('layout')} A${variable('active_tile')}`,
 			size: '14',
 			color: WHITE,
 			bgcolor: combineRgb(15, 23, 35),
-		}, [])
-	}
-	button('readout_status', 'Readouts', 'Connection status', {
-		text: `QMonitor\n${variable('connection_status')}\nL${variable('layout')} A${variable('active_tile')}`,
-		size: '14',
-		color: WHITE,
-		bgcolor: combineRgb(15, 23, 35),
-	}, [], [{ feedbackId: 'connected', options: {}, style: { bgcolor: combineRgb(20, 60, 30), color: WHITE } }])
+		},
+		[],
+		[{ feedbackId: 'connected', options: {}, style: { bgcolor: combineRgb(20, 60, 30), color: WHITE } }],
+	)
 
-	button('readout_alarm', 'Readouts', 'Latest alarm (read-only)', {
-		text: `${variable('alarm_latest_label')}\n${variable('alarm_latest_type')}\n${variable('alarm_latest_detail')}`,
-		size: '14',
-		color: WHITE,
-		bgcolor: combineRgb(15, 23, 35),
-	}, [])
+	button(
+		'readout_alarm',
+		'Readouts',
+		'Latest alarm (read-only)',
+		{
+			text: `${variable('alarm_latest_label')}\n${variable('alarm_latest_type')}\n${variable('alarm_latest_detail')}`,
+			size: '14',
+			color: WHITE,
+			bgcolor: combineRgb(15, 23, 35),
+		},
+		[],
+	)
 
 	self.setPresetDefinitions(presets)
 }

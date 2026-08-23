@@ -94,12 +94,18 @@ function hexToRgb(hex: string): [number, number, number] | null {
 }
 
 export function UpdateFeedbacks(self: ModuleInstance): void {
-	const tileBoolean = (name: string, read: (tile: TileSnapshot | undefined) => boolean, bgcolor: number, color = combineRgb(0, 0, 0)) => ({
+	const tileBoolean = (
+		name: string,
+		read: (tile: TileSnapshot | undefined) => boolean,
+		bgcolor: number,
+		color = combineRgb(0, 0, 0),
+	) => ({
 		name,
 		type: 'boolean' as const,
 		defaultStyle: { bgcolor, color },
 		options: [tileFeedbackOption()],
-		callback: (feedback: { options: Record<string, unknown> }): boolean => read(getResolvedTile(self.snapshot, feedback.options.tile)),
+		callback: (feedback: { options: Record<string, unknown> }): boolean =>
+			read(getResolvedTile(self.snapshot, feedback.options.tile)),
 	})
 
 	const feedbacks: CompanionFeedbackDefinitions = {
@@ -173,7 +179,8 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 				{ id: 'kind', type: 'dropdown', label: 'Source kind', default: 'ndi', choices: SOURCE_KIND_CHOICES },
 			],
 			callback: (feedback) =>
-				String(getResolvedTile(self.snapshot, feedback.options.tile)?.sourceKind ?? 'none') === String(feedback.options.kind),
+				String(getResolvedTile(self.snapshot, feedback.options.tile)?.sourceKind ?? 'none') ===
+				String(feedback.options.kind),
 		},
 		tile_vu: tileBoolean('Tile: VU meters on', (tile) => tile?.vu === true, combineRgb(34, 197, 94)),
 		tile_peaking: tileBoolean('Tile: Focus peaking on', (tile) => tile?.peaking === true, combineRgb(34, 197, 94)),
@@ -194,7 +201,8 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 				tileFeedbackOption(),
 				{ id: 'value', type: 'dropdown', label: 'Scope', default: 'waveform', choices: SCOPE_TYPE_CHOICES },
 			],
-			callback: (feedback) => tileShowsScope(getResolvedTile(self.snapshot, feedback.options.tile), String(feedback.options.value ?? '')),
+			callback: (feedback) =>
+				tileShowsScope(getResolvedTile(self.snapshot, feedback.options.tile), String(feedback.options.value ?? '')),
 		},
 		// The narrower one: what the single-scope layouts are set to, whether or not
 		// that layout is the one in use. Wired to the "Scope type" action, which sets
@@ -207,7 +215,8 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 				tileFeedbackOption(),
 				{ id: 'value', type: 'dropdown', label: 'Scope', default: 'waveform', choices: SCOPE_TYPE_CHOICES },
 			],
-			callback: (feedback) => scopeType(getResolvedTile(self.snapshot, feedback.options.tile)) === String(feedback.options.value),
+			callback: (feedback) =>
+				scopeType(getResolvedTile(self.snapshot, feedback.options.tile)) === String(feedback.options.value),
 		},
 		tile_scope_layout: {
 			name: 'Tile: scopes layout matches',
@@ -217,20 +226,23 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 				tileFeedbackOption(),
 				{ id: 'value', type: 'dropdown', label: 'Layout', default: 'bottom', choices: SCOPE_LAYOUT_CHOICES },
 			],
-			callback: (feedback) => scopeLayout(getResolvedTile(self.snapshot, feedback.options.tile)) === String(feedback.options.value),
+			callback: (feedback) =>
+				scopeLayout(getResolvedTile(self.snapshot, feedback.options.tile)) === String(feedback.options.value),
 		},
 		// Matches the SETTING, not a measurement — see scopeDynamicRange() in
 		// state.ts for why a resolved value is not offered here.
 		tile_scope_dynamic_range: {
 			name: 'Tile: scopes dynamic range matches',
-			description: 'Matches the setting (auto / SDR / HDR), not what Auto resolved to — QMonitor does not publish that.',
+			description:
+				'Matches the setting (auto / SDR / HDR), not what Auto resolved to — QMonitor does not publish that.',
 			type: 'boolean',
 			defaultStyle: { bgcolor: combineRgb(217, 119, 6), color: combineRgb(0, 0, 0) },
 			options: [
 				tileFeedbackOption(),
 				{ id: 'value', type: 'dropdown', label: 'Range', default: 'auto', choices: SCOPE_DYNAMIC_RANGE_CHOICES },
 			],
-			callback: (feedback) => scopeDynamicRange(getResolvedTile(self.snapshot, feedback.options.tile)) === String(feedback.options.value),
+			callback: (feedback) =>
+				scopeDynamicRange(getResolvedTile(self.snapshot, feedback.options.tile)) === String(feedback.options.value),
 		},
 		tile_labels: tileBoolean('Tile: Label on', (tile) => tile?.labels === true, combineRgb(34, 197, 94)),
 		tile_info: tileBoolean('Tile: Infos overlay on', (tile) => tile?.info === true, combineRgb(34, 197, 94)),
@@ -247,17 +259,47 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 				return tile?.info === true && tile.infoOptions?.[String(feedback.options.option)] === true
 			},
 		},
-		tile_assist_monochrome: tileBoolean('Tile: Black & white on', (tile) => tile?.assist?.monochrome === true, combineRgb(148, 163, 184)),
-		tile_assist_false_color: tileBoolean('Tile: False colours on', (tile) => tile?.assist?.falseColor === true, combineRgb(234, 179, 8)),
-		tile_assist_zebras: tileBoolean('Tile: Zebras on', (tile) => tile?.assist?.zebras === true, combineRgb(234, 179, 8)),
-		tile_assist_markers: tileBoolean('Tile: Markers on', (tile) => tile?.assist?.markers === true, combineRgb(59, 130, 246)),
-		tile_assist_reticle: tileBoolean('Tile: Reticle on', (tile) => tile?.assist?.reticle === true, combineRgb(59, 130, 246)),
+		tile_assist_monochrome: tileBoolean(
+			'Tile: Black & white on',
+			(tile) => tile?.assist?.monochrome === true,
+			combineRgb(148, 163, 184),
+		),
+		tile_assist_false_color: tileBoolean(
+			'Tile: False colours on',
+			(tile) => tile?.assist?.falseColor === true,
+			combineRgb(234, 179, 8),
+		),
+		tile_assist_zebras: tileBoolean(
+			'Tile: Zebras on',
+			(tile) => tile?.assist?.zebras === true,
+			combineRgb(234, 179, 8),
+		),
+		tile_assist_markers: tileBoolean(
+			'Tile: Markers on',
+			(tile) => tile?.assist?.markers === true,
+			combineRgb(59, 130, 246),
+		),
+		tile_assist_reticle: tileBoolean(
+			'Tile: Reticle on',
+			(tile) => tile?.assist?.reticle === true,
+			combineRgb(59, 130, 246),
+		),
 
 		// ---- Freeze & compare ----
 		// Cyan, not green: a frozen picture is not a healthy state to leave a wall
 		// in, and it must never read like "everything is fine".
-		tile_frozen: tileBoolean('Tile: Reference frozen', (tile) => tile?.compare?.frozen === true, combineRgb(6, 182, 212), combineRgb(0, 0, 0)),
-		tile_comparing: tileBoolean('Tile: Comparison showing', (tile) => tile?.compare?.showing === true, combineRgb(6, 182, 212), combineRgb(0, 0, 0)),
+		tile_frozen: tileBoolean(
+			'Tile: Reference frozen',
+			(tile) => tile?.compare?.frozen === true,
+			combineRgb(6, 182, 212),
+			combineRgb(0, 0, 0),
+		),
+		tile_comparing: tileBoolean(
+			'Tile: Comparison showing',
+			(tile) => tile?.compare?.showing === true,
+			combineRgb(6, 182, 212),
+			combineRgb(0, 0, 0),
+		),
 		tile_compare_mode: {
 			name: 'Tile: Comparison in a given mode',
 			type: 'boolean',
@@ -381,7 +423,12 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 		},
 
 		// ---- Recording ----
-		tile_recording: tileBoolean('Tile is recording', (tile) => isTileRecording(tile), combineRgb(220, 38, 38), combineRgb(255, 255, 255)),
+		tile_recording: tileBoolean(
+			'Tile is recording',
+			(tile) => isTileRecording(tile),
+			combineRgb(220, 38, 38),
+			combineRgb(255, 255, 255),
+		),
 		any_recording: {
 			name: 'Any tile is recording',
 			type: 'boolean',
@@ -460,7 +507,10 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 			callback: (feedback) => {
 				const tile = getResolvedTile(self.snapshot, feedback.options.tile)
 				if (!tile?.peaking) return {}
-				const hex = tile.peakingColor === 'custom' ? (tile.peakingCustomColor ?? '') : (PEAK_COLOR_HEX[String(tile.peakingColor)] ?? '')
+				const hex =
+					tile.peakingColor === 'custom'
+						? (tile.peakingCustomColor ?? '')
+						: (PEAK_COLOR_HEX[String(tile.peakingColor)] ?? '')
 				const rgb = hexToRgb(hex)
 				if (!rgb) return {}
 				const bg = combineRgb(rgb[0], rgb[1], rgb[2])
@@ -482,7 +532,8 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 				tileFeedbackOption(),
 				{ id: 'match', type: 'dropdown', label: 'State', default: 'program', choices: TALLY_MATCH_CHOICES },
 			],
-			callback: (feedback) => tallyMatches(getResolvedTile(self.snapshot, feedback.options.tile), feedback.options.match),
+			callback: (feedback) =>
+				tallyMatches(getResolvedTile(self.snapshot, feedback.options.tile), feedback.options.match),
 		},
 		// Uses the colours QMonitor is actually drawing, so the button matches the
 		// wall even after the operator recolours the tally.
@@ -538,7 +589,8 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 					],
 				},
 			],
-			callback: (feedback) => tallyOrigin(getResolvedTile(self.snapshot, feedback.options.tile)) === String(feedback.options.origin),
+			callback: (feedback) =>
+				tallyOrigin(getResolvedTile(self.snapshot, feedback.options.tile)) === String(feedback.options.origin),
 		},
 		// A mixer that stopped talking must not leave a tile pretending to be on
 		// air. QMonitor expires the state; this surfaces the fact it happened.
@@ -749,7 +801,8 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 		// ---- Configuration presets ----
 		preset_button: {
 			name: 'Preset: Name and contents',
-			description: 'Shows the preset a key is bound to, and whether it carries sources. Dim when no preset by that name exists.',
+			description:
+				'Shows the preset a key is bound to, and whether it carries sources. Dim when no preset by that name exists.',
 			type: 'advanced',
 			options: [{ id: 'value', type: 'textinput', label: 'Preset name', default: '' }],
 			callback: (feedback) => {
@@ -785,7 +838,8 @@ export function UpdateFeedbacks(self: ModuleInstance): void {
 				{ id: 'threshold', type: 'number', label: 'Level threshold (0-100)', default: 5, min: 0, max: 100 },
 			],
 			callback: (feedback) =>
-				safeNumber(getResolvedTile(self.snapshot, feedback.options.tile)?.stats?.audioPeak) >= Number(feedback.options.threshold),
+				safeNumber(getResolvedTile(self.snapshot, feedback.options.tile)?.stats?.audioPeak) >=
+				Number(feedback.options.threshold),
 		},
 	}
 

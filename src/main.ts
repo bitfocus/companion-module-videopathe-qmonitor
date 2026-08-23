@@ -4,7 +4,14 @@ import { UpdateActions } from './actions.js'
 import { GetConfigFields, type ModuleConfig } from './config.js'
 import { UpdateFeedbacks } from './feedbacks.js'
 import { UpdatePresets } from './presets.js'
-import { clampNumber, dbToRatio, getResolvedTile, safeNumber, type QMonitorSnapshot, type TileSnapshot } from './state.js'
+import {
+	clampNumber,
+	dbToRatio,
+	getResolvedTile,
+	safeNumber,
+	type QMonitorSnapshot,
+	type TileSnapshot,
+} from './state.js'
 import { UpgradeScripts } from './upgrades.js'
 import { buildVariableValues, UpdateVariableDefinitions } from './variables.js'
 
@@ -318,10 +325,17 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 			for (let channel = 0; channel < targets.length; channel += 1) {
 				const target = targets[channel]
 				const previous = current[channel] ?? 0
-				next[channel] = clampNumber(target >= previous ? target : Math.max(target, previous - VU_RELEASE_PER_TICK), 0, 100)
+				next[channel] = clampNumber(
+					target >= previous ? target : Math.max(target, previous - VU_RELEASE_PER_TICK),
+					0,
+					100,
+				)
 			}
 			this.vuChannels.set(tile.index, next)
-			if (tile.recording?.requested === true || ['recording', 'starting', 'requested'].includes(String(tile.recording?.status ?? '').toLowerCase())) {
+			if (
+				tile.recording?.requested === true ||
+				['recording', 'starting', 'requested'].includes(String(tile.recording?.status ?? '').toLowerCase())
+			) {
 				anyRecording = true
 			}
 		}
@@ -353,7 +367,9 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 		const animated = this.vuChannels.get(index)
 		if (animated && animated.length > 0) return animated
 		// Fall back to the instantaneous snapshot levels before the first tick.
-		return (this.snapshot?.tiles?.find((tile) => tile.index === index)?.stats?.audioLevelsDb ?? []).map((db) => dbToRatio(db) * 100)
+		return (this.snapshot?.tiles?.find((tile) => tile.index === index)?.stats?.audioLevelsDb ?? []).map(
+			(db) => dbToRatio(db) * 100,
+		)
 	}
 
 	private pushVariables(): void {

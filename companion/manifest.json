@@ -23,5 +23,21 @@
 	"legacyIds": [],
 	"manufacturer": "Videopathe",
 	"products": ["QMonitor"],
-	"keywords": ["video", "monitoring", "multiview", "ndi", "omt", "srt", "recording", "vu", "scopes", "waveform", "vectorscope", "diamond", "gamut", "tally", "lut"]
+	"keywords": [
+		"video",
+		"monitoring",
+		"multiview",
+		"ndi",
+		"omt",
+		"srt",
+		"recording",
+		"vu",
+		"scopes",
+		"waveform",
+		"vectorscope",
+		"diamond",
+		"gamut",
+		"tally",
+		"lut"
+	]
 }

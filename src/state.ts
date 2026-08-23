@@ -289,6 +289,18 @@ export function safeNumber(value: unknown, fallback = 0): number {
 	return Number.isFinite(parsed) ? parsed : fallback
 }
 
+/**
+ * Companion hands option values back as `unknown`. They are primitives in
+ * practice, but `String()` on an `unknown` turns an object into
+ * `[object Object]` — which would then be compared against a real value and
+ * silently never match. Narrowing first and falling back is the honest answer.
+ */
+export function optionString(value: unknown, fallback = ''): string {
+	if (typeof value === 'string') return value
+	if (typeof value === 'number' || typeof value === 'boolean') return String(value)
+	return fallback
+}
+
 export function clampNumber(value: number, min: number, max: number): number {
 	return Math.min(max, Math.max(min, value))
 }
@@ -513,7 +525,7 @@ export function isTallyForced(tile: TileSnapshot | undefined): boolean {
 /** `match` accepts the extra 'any' value, which no single tally state carries. */
 export function tallyMatches(tile: TileSnapshot | undefined, match: unknown): boolean {
 	const state = tallyState(tile)
-	const wanted = String(match ?? 'program').toLowerCase()
+	const wanted = optionString(match, 'program').toLowerCase()
 	if (wanted === 'any') return state === 'program' || state === 'preview'
 	return state === wanted
 }
@@ -633,7 +645,7 @@ export function unacknowledgedAlarmCount(snapshot: QMonitorSnapshot | undefined)
  */
 export function tileAlarms(tile: TileSnapshot | undefined, type: unknown = 'any'): string[] {
 	const types = tile?.alarms?.types ?? []
-	const wanted = String(type ?? 'any').toLowerCase()
+	const wanted = optionString(type, 'any').toLowerCase()
 	if (wanted === 'any' || wanted === '') return types
 	return types.filter((entry) => String(entry).toLowerCase() === wanted)
 }
@@ -647,7 +659,7 @@ export function tileAlarmsArmed(tile: TileSnapshot | undefined): boolean {
 }
 
 export function isAlarmConditionArmed(tile: TileSnapshot | undefined, type: unknown): boolean {
-	const key = String(type ?? '').toLowerCase()
+	const key = optionString(type).toLowerCase()
 	if (key === '' || key === 'any') return tileAlarmsArmed(tile)
 	return Boolean(tile?.alarms?.armed?.[key])
 }
@@ -730,8 +742,11 @@ export function configPresets(snapshot: QMonitorSnapshot | undefined): PresetSum
  * key must keep working after the preset is re-saved on another machine, where
  * the generated id will differ.
  */
-export function findConfigPreset(snapshot: QMonitorSnapshot | undefined, reference: unknown): PresetSummary | undefined {
-	const key = String(reference ?? '').trim().toLowerCase()
+export function findConfigPreset(
+	snapshot: QMonitorSnapshot | undefined,
+	reference: unknown,
+): PresetSummary | undefined {
+	const key = optionString(reference).trim().toLowerCase()
 	if (!key) return undefined
 	return configPresets(snapshot).find(
 		(preset) => String(preset.name ?? '').toLowerCase() === key || String(preset.id ?? '') === String(reference),

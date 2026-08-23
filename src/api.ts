@@ -37,7 +37,11 @@ export async function fetchJson<T>(url: string, init?: RequestInit, timeoutMs = 
  * QMonitor commands are simple GET calls: /api/cmd/<id>?param=value. Empty
  * params are dropped so "tile" left blank targets the active tile.
  */
-export function buildCommandUrl(baseUrl: string, commandId: string, params: Record<string, string | number | undefined>): string {
+export function buildCommandUrl(
+	baseUrl: string,
+	commandId: string,
+	params: Record<string, string | number | undefined>,
+): string {
 	const query = new URLSearchParams()
 	for (const [key, value] of Object.entries(params)) {
 		if (value === undefined) continue
