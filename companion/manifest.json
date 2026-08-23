@@ -1,18 +1,17 @@
 {
 	"$schema": "../node_modules/@companion-module/base/assets/manifest.schema.json",
-	"type": "connection",
-	"id": "your-module-name",
-	"name": "your-module-name",
-	"shortname": "module-shortname",
-	"description": "A short one line description of your module",
-	"version": "0.0.0",
+	"id": "videopathe-qmonitor",
+	"name": "videopathe-qmonitor",
+	"shortname": "QMonitor",
+	"description": "Control QMonitor (multi-source video monitoring) through its local HTTP API on port 2228, including tally from vMix, ATEM, OBS and TSL",
+	"version": "1.8.0",
 	"license": "MIT",
-	"repository": "git+https://github.com/bitfocus/companion-module-your-module-name.git",
-	"bugs": "https://github.com/bitfocus/companion-module-your-module-name/issues",
+	"repository": "git+https://github.com/bitfocus/companion-module-videopathe-qmonitor.git",
+	"bugs": "https://github.com/bitfocus/companion-module-videopathe-qmonitor/issues",
 	"maintainers": [
 		{
-			"name": "Your name",
-			"email": "Your email"
+			"name": "Quintus",
+			"email": "quintus.videopathe@gmail.com"
 		}
 	],
 	"runtime": {
@@ -22,7 +21,7 @@
 		"entrypoint": "../dist/main.js"
 	},
 	"legacyIds": [],
-	"manufacturer": "Your company",
-	"products": ["Your product"],
-	"keywords": []
+	"manufacturer": "Videopathe",
+	"products": ["QMonitor"],
+	"keywords": ["video", "monitoring", "multiview", "ndi", "omt", "srt", "recording", "vu", "scopes", "waveform", "vectorscope", "diamond", "gamut", "tally", "lut"]
 }
