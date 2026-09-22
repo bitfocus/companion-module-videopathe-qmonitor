@@ -29,7 +29,14 @@ const ALARM_BLINK_MS = 450
 // state from ten minutes ago is worse than one that is merely a second late.
 const LIVE_HEARTBEAT_MS = 5_000
 const EVENT_RECONNECT_MIN_MS = 1_000
-const EVENT_RECONNECT_MAX_MS = 15_000
+const EVENT_RECONNECT_MAX_MS = 60_000
+
+// When QMonitor cannot be reached, retrying four times a second serves nobody:
+// the app is not running or the host is wrong, and every attempt is a log line.
+// After a failure the next poll waits twice as long as the last one, up to a
+// minute, and the configured cadence comes back the moment a poll succeeds.
+const RETRY_MIN_MS = 1_000
+const RETRY_MAX_MS = 60_000
 
 export class ModuleInstance extends InstanceBase<ModuleConfig> {
 	config!: ModuleConfig
@@ -44,6 +51,11 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 	private pollInFlight = false
 	private abortController = new AbortController()
 	private connected = false
+	/** Delay before the next poll while QMonitor is unreachable; see RETRY_MIN_MS. */
+	private retryDelay = RETRY_MIN_MS
+	private consecutiveFailures = 0
+	private lastStatus: InstanceStatus | undefined
+	private lastStatusMessage: string | null | undefined
 	private eventStreamAbort: AbortController | undefined
 	private eventReconnectTimer: NodeJS.Timeout | undefined
 	private eventReconnectDelay = EVENT_RECONNECT_MIN_MS
@@ -86,6 +98,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 		this.config = config
 		this.snapshot = undefined
 		this.connected = false
+		this.resetBackoff()
 		this.vuChannels.clear()
 		this.pushVariables()
 		this.checkFeedbacks()
@@ -120,28 +133,61 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 
 	// ---- Polling ----
 
+	/**
+	 * Companion forwards every status update as-is, so calling it four times a
+	 * second with the same "connection refused" is four log lines a second.
+	 * Only a real change goes through.
+	 */
+	private setStatus(status: InstanceStatus, message?: string | null): void {
+		const normalized = message ?? null
+		if (status === this.lastStatus && normalized === this.lastStatusMessage) return
+		this.lastStatus = status
+		this.lastStatusMessage = normalized
+		this.updateStatus(status, normalized ?? undefined)
+	}
+
+	private resetBackoff(): void {
+		this.retryDelay = RETRY_MIN_MS
+		this.consecutiveFailures = 0
+	}
+
 	private startPolling(runImmediately: boolean): void {
 		this.stopPolling()
 		if (!this.hasValidConfig()) {
-			this.updateStatus(InstanceStatus.BadConfig)
+			this.setStatus(InstanceStatus.BadConfig)
 			this.connected = false
 			this.pushVariables()
 			this.checkFeedbacks()
 			return
 		}
-		this.updateStatus(InstanceStatus.Connecting)
-		this.pollTimer = setInterval(() => void this.refreshState(), this.pollIntervalMs())
+		if (!this.connected) this.setStatus(InstanceStatus.Connecting)
 		if (runImmediately) void this.refreshState()
+		else this.scheduleNextPoll()
+	}
+
+	/**
+	 * One-shot timer rather than setInterval: the delay depends on how the last
+	 * poll went, and the timer is only armed once the previous request is done so
+	 * a slow host is never asked twice at once.
+	 */
+	private scheduleNextPoll(): void {
+		if (this.pollTimer) clearTimeout(this.pollTimer)
+		if (!this.hasValidConfig()) return
+		this.pollTimer = setTimeout(() => {
+			this.pollTimer = undefined
+			void this.refreshState()
+		}, this.pollIntervalMs())
 	}
 
 	private pollIntervalMs(): number {
+		if (!this.connected && this.consecutiveFailures > 0) return this.retryDelay
 		if (this.eventStreamLive) return LIVE_HEARTBEAT_MS
 		return Math.max(150, safeNumber(this.config.pollInterval, 400))
 	}
 
 	private stopPolling(): void {
 		if (this.pollTimer) {
-			clearInterval(this.pollTimer)
+			clearTimeout(this.pollTimer)
 			this.pollTimer = undefined
 		}
 	}
@@ -173,9 +219,9 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 	private setEventStreamLive(live: boolean): void {
 		if (this.eventStreamLive === live) return
 		this.eventStreamLive = live
-		// The heartbeat cadence differs from the polling cadence, so the timer has
-		// to be rebuilt rather than left running at the old rate.
-		this.startPolling(false)
+		// The heartbeat cadence differs from the polling cadence, so a pending
+		// timer has to be re-armed rather than left waiting at the old rate.
+		if (this.pollTimer) this.scheduleNextPoll()
 	}
 
 	private async runEventStream(controller: AbortController): Promise<void> {
@@ -196,24 +242,31 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 					this.eventReconnectDelay = EVENT_RECONNECT_MIN_MS
 					this.setEventStreamLive(true)
 					this.snapshot = snapshot
-					this.connected = true
-					this.lastError = null
-					this.updateStatus(InstanceStatus.Ok)
+					this.markConnected()
 					this.pushVariables()
 					this.checkFeedbacks()
 				},
 				controller.signal,
 			)
 		} catch (error) {
-			if (controller === this.eventStreamAbort) {
+			// Only worth a line while QMonitor itself answers: an unreachable host
+			// is already reported (once) by the poller, and repeating it here for
+			// every retry is exactly the noise the backoff exists to avoid.
+			if (controller === this.eventStreamAbort && this.connected) {
 				this.log('debug', `Event stream unavailable: ${error instanceof Error ? error.message : String(error)}`)
 			}
 		}
 
 		if (controller !== this.eventStreamAbort || controller.signal.aborted) return
-		// The stream ended or never opened. Fall back to polling and retry with a
-		// widening delay so an old QMonitor without /api/events is not hammered.
 		this.setEventStreamLive(false)
+		// Unreachable host: leave the retry to the poller, which backs off on its
+		// own and reopens the stream as soon as a poll gets through.
+		if (!this.connected) {
+			this.eventStreamAbort = undefined
+			return
+		}
+		// The stream ended or never opened while the app is up (an old QMonitor
+		// without /api/events, say). Retry with a widening delay.
 		const delay = this.eventReconnectDelay
 		this.eventReconnectDelay = Math.min(EVENT_RECONNECT_MAX_MS, delay * 2)
 		this.eventReconnectTimer = setTimeout(() => {
@@ -233,21 +286,47 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 			})
 			if (controller !== this.abortController) return
 			this.snapshot = snapshot
-			this.connected = true
-			this.lastError = null
-			this.updateStatus(InstanceStatus.Ok)
+			this.markConnected()
 			this.pushVariables()
 			this.checkFeedbacks()
 		} catch (error) {
 			if (controller !== this.abortController || controller.signal.aborted) return
-			this.connected = false
-			this.lastError = error instanceof Error ? error.message : String(error)
-			this.updateStatus(InstanceStatus.ConnectionFailure, this.lastError)
+			this.markDisconnected(error instanceof Error ? error.message : String(error))
 			this.pushVariables()
 			this.checkFeedbacks()
 		} finally {
 			this.pollInFlight = false
+			// Not after destroy() or a config change: those own the next poll.
+			if (controller === this.abortController && !controller.signal.aborted) this.scheduleNextPoll()
 		}
+	}
+
+	private markConnected(): void {
+		const wasConnected = this.connected
+		this.connected = true
+		this.lastError = null
+		this.setStatus(InstanceStatus.Ok)
+		if (wasConnected) return
+		if (this.consecutiveFailures > 0) this.log('info', `Connected to QMonitor at ${this.getBaseUrl()}`)
+		this.resetBackoff()
+		// The stream gave up while the host was down; now that it answers, bring
+		// the low-latency path back.
+		if (!this.eventStreamAbort) this.startEventStream()
+	}
+
+	private markDisconnected(message: string): void {
+		this.connected = false
+		this.lastError = message
+		this.consecutiveFailures += 1
+		this.setStatus(InstanceStatus.ConnectionFailure, message)
+		// One line when the link drops, then silence until it is back: the status
+		// badge already says it is down, and a log that repeats it every poll
+		// buries whatever else is going on in Companion.
+		if (this.consecutiveFailures === 1) {
+			this.log('warn', `Cannot reach QMonitor at ${this.getBaseUrl()}: ${message} — retrying with backoff`)
+		}
+		// 1 s, 2 s, 4 s … 60 s between attempts.
+		this.retryDelay = this.consecutiveFailures === 1 ? RETRY_MIN_MS : Math.min(RETRY_MAX_MS, this.retryDelay * 2)
 	}
 
 	// ---- Command dispatch ----
@@ -273,7 +352,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 		params: Record<string, string | number | undefined>,
 	): Promise<CommandResult | undefined> {
 		if (!this.hasValidConfig()) {
-			this.updateStatus(InstanceStatus.BadConfig)
+			this.setStatus(InstanceStatus.BadConfig)
 			return undefined
 		}
 		const url = buildCommandUrl(this.getBaseUrl(), commandId, params)
@@ -288,10 +367,11 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 			void this.refreshState()
 			return result
 		} catch (error) {
-			this.connected = false
-			this.lastError = error instanceof Error ? error.message : String(error)
-			this.log('error', `Command ${commandId} failed: ${this.lastError}`)
-			this.updateStatus(InstanceStatus.ConnectionFailure, this.lastError)
+			// A button press is a deliberate act, so its failure is always worth
+			// a line — unlike the poller's, which would repeat it every tick.
+			const message = error instanceof Error ? error.message : String(error)
+			this.log('error', `Command ${commandId} failed: ${message}`)
+			this.markDisconnected(message)
 			this.checkFeedbacks()
 			return undefined
 		}

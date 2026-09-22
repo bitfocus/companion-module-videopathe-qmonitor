@@ -11,6 +11,7 @@ import {
 	COMPARE_MODE_CHOICES,
 	INFO_OPTION_CHOICES,
 	LANGUAGE_CHOICES,
+	languageLabel,
 	LUT_STRENGTH_CHOICES,
 	LAYOUT_CHOICES,
 	PEAK_COLOR_CHOICES,
@@ -30,6 +31,7 @@ import {
 	TSL_FIELD_CHOICES,
 } from './choices.js'
 import type { ModuleInstance } from './main.js'
+import { supportedLanguages } from './state.js'
 
 function tileOption(): CompanionInputFieldDropdown {
 	return {
@@ -785,7 +787,21 @@ export function UpdateActions(self: ModuleInstance): void {
 		app_language: {
 			name: 'App: Language',
 			options: [{ id: 'value', type: 'dropdown', label: 'Language', default: 'en', choices: LANGUAGE_CHOICES }],
-			callback: async (event) => self.sendCommand('app.language', { value: String(event.options.value ?? '') }),
+			callback: async (event) => {
+				const value = String(event.options.value ?? '').toLowerCase()
+				// Checked here rather than left to the app: an older QMonitor answers
+				// "invalid-value", which tells nobody that the fix is an update.
+				const offered = supportedLanguages(self.snapshot)
+				if (self.snapshot && !offered.includes(value)) {
+					const version = self.snapshot.version ? `QMonitor ${self.snapshot.version}` : 'This QMonitor'
+					self.log(
+						'error',
+						`${version} does not offer ${languageLabel(value)} (${value}) — it has ${offered.map(languageLabel).join(', ')}. Update QMonitor to 2026.10.0 or later.`,
+					)
+					return
+				}
+				await self.sendCommand('app.language', { value })
+			},
 		},
 	})
 }

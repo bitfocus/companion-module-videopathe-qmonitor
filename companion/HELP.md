@@ -9,7 +9,7 @@ Control **QMonitor** (multi-source video monitoring, Desktop & Android) from Bit
 3. In this module's config, enter:
    - **Host / IP** — the machine running QMonitor (e.g. `127.0.0.1` if Companion runs on the same PC, or the tablet's Wi-Fi IP for Android).
    - **Port** — `2228` (default).
-   - **Poll interval** — how often Companion refreshes feedback (default `250 ms`). Lower = snappier VU meters, more network traffic.
+   - **Poll interval** — how often Companion refreshes feedback (default `250 ms`). Lower = snappier VU meters, more network traffic. This is the cadence _while QMonitor answers_: when it cannot be reached (app closed, wrong host), the module backs off — 1 s, 2 s, 4 s… up to a minute between attempts — logs the failure once, and returns to the configured cadence as soon as a poll gets through.
    - **Animate** — enables the live VU meters and pulsing recording buttons.
    - **Live event stream** — leave this on. State changes are then _pushed_ instead of polled, so tally follows the mixer in milliseconds rather than up to one poll interval. Polling keeps running as a slow heartbeat, so nothing breaks if the stream is unavailable.
 
@@ -28,7 +28,9 @@ Everything the keyboard shortcuts do, and more:
 - **Alpha** — show the transparency of a keyed NDI or OMT source, and keep the matte in the recording. See below.
 - **Recording** — start/stop per tile or all tiles, quality mode.
 - **Tally** — force and release per-tile tally, map tiles to mixer inputs, choose the rendering and its colours. See below.
-- **App** — UI language.
+- **App** — UI language (French, English, Spanish, Italian, German, Portuguese, Dutch).
+
+> Spanish, Italian, German, Portuguese and Dutch need **QMonitor 2026.10.0 or later**. On an older build the action does nothing and the log says which languages that build offers; the `languages` variable lists them too.
 
 ## Tiles
 
@@ -511,6 +513,7 @@ not equally good:
 | Source                                                       | Measured from                                           |
 | ------------------------------------------------------------ | ------------------------------------------------------- |
 | NDI, OMT, USB, DeckLink                                      | the decoded **PCM** stream, per source channel          |
+| Clone                                                        | whatever the cloned source measures from                |
 | SRT, RTSP on Android                                         | the native player's own levels                          |
 | SRT, RTSP, HTTP on desktop, WebRTC, screen capture, web page | QMonitor's **WebAudio analyser** on the playing element |
 

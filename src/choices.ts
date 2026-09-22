@@ -162,12 +162,29 @@ export const QUALITY_CHOICES: DropdownChoice[] = [
 	{ id: 'optimized', label: 'Optimized' },
 ]
 
+// Every language the module knows how to ask for. Which of them a given
+// QMonitor actually offers comes from its snapshot (`languages`); builds before
+// 2026.10 only have French and English and do not publish the list at all, so
+// the action checks before sending and says so instead of a bare "rejected".
 export const LANGUAGE_CHOICES: DropdownChoice[] = [
 	{ id: 'fr', label: 'Français' },
 	{ id: 'en', label: 'English' },
+	{ id: 'es', label: 'Español' },
+	{ id: 'it', label: 'Italiano' },
+	{ id: 'de', label: 'Deutsch' },
+	{ id: 'pt', label: 'Português' },
+	{ id: 'nl', label: 'Nederlands' },
 ]
 
+export function languageLabel(id: string): string {
+	return LANGUAGE_CHOICES.find((choice) => choice.id === id)?.label ?? id
+}
+
+// Clone is a second view of a source another tile already holds (a DeckLink or
+// USB input cannot be opened twice), so a wall can show the same camera clean
+// on one tile and with scopes on the next.
 export const SOURCE_KIND_CHOICES: DropdownChoice[] = [
+	{ id: 'clone', label: 'Clone' },
 	{ id: 'ndi', label: 'NDI' },
 	{ id: 'omt', label: 'OMT' },
 	{ id: 'srt', label: 'SRT' },
@@ -176,6 +193,7 @@ export const SOURCE_KIND_CHOICES: DropdownChoice[] = [
 	{ id: 'webrtc', label: 'WebRTC' },
 	{ id: 'usb', label: 'USB / UVC' },
 	{ id: 'decklink', label: 'DeckLink' },
+	{ id: 'screen', label: 'Screen capture' },
 	{ id: 'webpage', label: 'Web page' },
 	{ id: 'none', label: 'No source' },
 ]

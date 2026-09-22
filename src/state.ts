@@ -156,6 +156,8 @@ export interface TallyMixerState {
 export interface TallyStyleState {
 	programColor?: string
 	previewColor?: string
+	programEnabled?: boolean
+	previewEnabled?: boolean
 	opacity?: number
 	thickness?: number
 	/** Lamp width as a % of the tile, badge mode. Sent by the appearance action. */
@@ -272,6 +274,8 @@ export interface QMonitorSnapshot {
 	globalAudioMuted?: boolean
 	recordingQualityMode?: string
 	language?: string
+	/** UI languages this build offers. Absent before 2026.10 (French and English only). */
+	languages?: string[]
 	tallyDisplay?: string
 	tallyStyle?: TallyStyleState
 	tallyMixer?: TallyMixerState
@@ -545,6 +549,7 @@ export function anyTallyStale(snapshot: QMonitorSnapshot | undefined): boolean {
 // DeckLink and WebRTC keep their real casing — shouting DECKLINK is not the
 // same thing as writing it properly.
 const SOURCE_KIND_LABELS: Record<string, string> = {
+	clone: 'Clone',
 	ndi: 'NDI',
 	omt: 'OMT',
 	srt: 'SRT',
@@ -553,6 +558,7 @@ const SOURCE_KIND_LABELS: Record<string, string> = {
 	webrtc: 'WebRTC',
 	usb: 'USB',
 	decklink: 'DeckLink',
+	screen: 'Screen',
 	webpage: 'Web',
 	none: '—',
 }
@@ -560,6 +566,17 @@ const SOURCE_KIND_LABELS: Record<string, string> = {
 export function sourceKindLabel(kind: string | undefined): string {
 	const key = String(kind ?? 'none').toLowerCase()
 	return SOURCE_KIND_LABELS[key] ?? key.toUpperCase()
+}
+
+/** Languages the build before 2026.10 shipped with; it does not publish the list. */
+const LEGACY_LANGUAGES = ['fr', 'en']
+
+export function supportedLanguages(snapshot: QMonitorSnapshot | undefined): string[] {
+	const published = snapshot?.languages
+	if (Array.isArray(published) && published.length > 0) {
+		return published.map((code) => String(code).toLowerCase())
+	}
+	return LEGACY_LANGUAGES
 }
 
 export function tileFollowsMixer(tile: TileSnapshot | undefined): boolean {

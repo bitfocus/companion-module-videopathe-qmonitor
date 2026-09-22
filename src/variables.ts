@@ -22,6 +22,7 @@ import {
 	alarmTypeLabel,
 	latestAlarm,
 	type QMonitorSnapshot,
+	supportedLanguages,
 } from './state.js'
 import type { ModuleInstance } from './main.js'
 
@@ -41,6 +42,7 @@ export function UpdateVariableDefinitions(self: ModuleInstance): void {
 		{ variableId: 'global_audio_muted', name: 'Global audio muted (true/false)' },
 		{ variableId: 'recording_quality', name: 'Recording quality mode' },
 		{ variableId: 'language', name: 'UI language' },
+		{ variableId: 'languages', name: 'UI languages this QMonitor offers (comma separated)' },
 		{ variableId: 'any_recording', name: 'Any tile recording (true/false)' },
 		{ variableId: 'recording_count', name: 'Number of tiles recording' },
 		{ variableId: 'recording_duration', name: 'Longest active recording duration (m:ss)' },
@@ -165,6 +167,7 @@ export function buildVariableValues(self: ModuleInstance): CompanionVariableValu
 		global_audio_muted: boolText(snapshot?.globalAudioMuted),
 		recording_quality: snapshot?.recordingQualityMode ?? '',
 		language: snapshot?.language ?? '',
+		languages: supportedLanguages(snapshot).join(', '),
 		any_recording: boolText((snapshot?.tiles ?? []).some((tile) => isTileRecording(tile))),
 		recording_count: (snapshot?.tiles ?? []).filter((tile) => isTileRecording(tile)).length,
 		recording_duration: formatDuration(longestRecordingElapsedMs(snapshot)),
