@@ -1,6 +1,6 @@
 {
 	"name": "companion-module-videopathe-qmonitor",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "Bitfocus Companion module for QMonitor",
 	"main": "dist/main.js",
 	"type": "module",

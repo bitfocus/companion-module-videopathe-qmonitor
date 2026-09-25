@@ -4,7 +4,7 @@
 	"name": "videopathe-qmonitor",
 	"shortname": "QMonitor",
 	"description": "Control QMonitor (multi-source video monitoring) through its local HTTP API on port 2228, including tally from vMix, ATEM, OBS and TSL",
-	"version": "1.9.0",
+	"version": "0.0.0",
 	"license": "MIT",
 	"repository": "git+https://github.com/bitfocus/companion-module-videopathe-qmonitor.git",
 	"bugs": "https://github.com/bitfocus/companion-module-videopathe-qmonitor/issues",

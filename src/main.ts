@@ -182,7 +182,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 	private pollIntervalMs(): number {
 		if (!this.connected && this.consecutiveFailures > 0) return this.retryDelay
 		if (this.eventStreamLive) return LIVE_HEARTBEAT_MS
-		return Math.max(150, safeNumber(this.config.pollInterval, 400))
+		return Math.max(150, safeNumber(this.config.pollInterval, 250))
 	}
 
 	private stopPolling(): void {
@@ -356,8 +356,12 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 			return undefined
 		}
 		const url = buildCommandUrl(this.getBaseUrl(), commandId, params)
+		// Bound to the instance lifecycle like refreshState(): an answer landing
+		// after destroy() or a config change must not touch state.
+		const controller = this.abortController
 		try {
-			const result = await fetchJson<CommandResult>(url, { method: 'GET' })
+			const result = await fetchJson<CommandResult>(url, { method: 'GET', signal: controller.signal })
+			if (controller !== this.abortController || controller.signal.aborted) return undefined
 			if (result?.ok === false) {
 				this.log('warn', `Command ${commandId} rejected: ${result.error ?? 'unknown'} (${url})`)
 			} else {
@@ -367,6 +371,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig> {
 			void this.refreshState()
 			return result
 		} catch (error) {
+			if (controller !== this.abortController || controller.signal.aborted) return undefined
 			// A button press is a deliberate act, so its failure is always worth
 			// a line — unlike the poller's, which would repeat it every tick.
 			const message = error instanceof Error ? error.message : String(error)
